@@ -4,5 +4,9 @@
     <string name="app_name">airborne</string>
     <string name="hello_round">Hello Round World!</string>
     <string name="hello_square">Hello Square World!</string>
+    <string name="accelorometer">Accelorometer</string>
+    <string name="gravity">Gravity</string>
+    <string name="airborne_heading">Airborne time</string>
+    <string name="airborne_time">0.0</string>
 
 </resources>
