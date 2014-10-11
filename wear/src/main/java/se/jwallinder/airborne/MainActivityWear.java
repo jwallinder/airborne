@@ -6,15 +6,22 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.media.MediaActionSound;
 import android.os.Bundle;
 import android.support.wearable.view.WatchViewStub;
+import android.util.Log;
 import android.view.WindowManager;
 import android.widget.TextView;
 
+import com.google.android.gms.wearable.DataMap;
+import com.google.android.gms.wearable.MessageApi;
+
 import java.text.NumberFormat;
 
-public class MainActivity extends Activity implements SensorEventListener {
+import se.heinrisch.talkclient.TalkClient;
+import se.heinrisch.talkclient.adapters.TalkCallbackAdapter;
+import se.heinrisch.talkclient.adapters.TalkMessageAdapter;
+
+public class MainActivityWear extends Activity implements SensorEventListener {
 
     private TextView mTextView;
     private TextView mTextViewAirborneTime;
@@ -22,6 +29,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     private TextView mTextViewGravX, mTextViewGravY, mTextViewGravZ, mTextViewGravG;
     private SensorManager mSensorManager;
     private Sensor mSensorAcc, mSensorGrav;
+    private TalkClient mTalkClient;
 
     private boolean inFreefall = false;
     private long start, stop, freeFallTime;
@@ -32,10 +40,26 @@ public class MainActivity extends Activity implements SensorEventListener {
     double maxG = 0;
     double minG = 1000;
 
+    public static final NumberFormat NF = NumberFormat.getNumberInstance();
+
+    {
+        NF.setMaximumFractionDigits(2);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mTalkClient = new TalkClient(this);
+        mTalkClient.setTalkCallbackAdapter(new TalkCallbackAdapter(){
+            @Override
+            public void onConnected(Bundle bundle) {
+                sendMessage("/airborne", "airborneTime","device is ready");
+            }
+        });
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+
+
         final WatchViewStub stub = (WatchViewStub) findViewById(R.id.watch_view_stub);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         stub.setOnLayoutInflatedListener(new WatchViewStub.OnLayoutInflatedListener() {
@@ -56,21 +80,45 @@ public class MainActivity extends Activity implements SensorEventListener {
                 mTextViewGravG = (TextView) stub.findViewById(R.id.gravG);
 
 
-
-                mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-
                 mSensorGrav = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
-                mSensorManager.registerListener(MainActivity.this, mSensorGrav, SensorManager.SENSOR_DELAY_GAME);
+                mSensorManager.registerListener(MainActivityWear.this, mSensorGrav, SensorManager.SENSOR_DELAY_GAME);
 
                 mSensorAcc = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-                mSensorManager.registerListener(MainActivity.this, mSensorAcc, SensorManager.SENSOR_DELAY_GAME);
+                mSensorManager.registerListener(MainActivityWear.this, mSensorAcc, SensorManager.SENSOR_DELAY_GAME);
+
 
             }
         });
     }
 
-    private void onFreefall(){
-        if (!inFreefall){
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mTalkClient.connectClient();
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mSensorManager.unregisterListener(this);
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        mTalkClient.disconnectClient();
+        super.onDestroy();
+    }
+
+    private void onFreefall() {
+        if (!inFreefall) {
             start = System.currentTimeMillis();
             inFreefall = true;
             freeFallTime = 0;
@@ -78,17 +126,39 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     }
 
-    private void onBackToEarth(){
-        if (inFreefall){
+    private void onBackToEarth() {
+        if (inFreefall) {
             stop = System.currentTimeMillis();
             inFreefall = false;
-            freeFallTime = stop-start;
+            freeFallTime = stop - start;
+
+            //T = sqrt ( 2 * height / 9.8 )
+            //T^2 = 2*heigtt/9.9
+            //H = 9.8*T^2/2
+
+            sendMessage("/airborne", "airborneTime", getFreeFallString());
         }
+
+
     }
 
-    private long getFreeFallTime(){
+    private void sendMessage(String path, String key, String value) {
+        DataMap dataMap = new DataMap();
+        dataMap.putString(key, value);
+
+        mTalkClient.sendMessage(path, dataMap);
+    }
+
+    private String getFreeFallString(){
+         double height = 9.8*(freeFallTime*freeFallTime/1000000.0)/8;
+        String s = NF.format(freeFallTime)+"ms, " + NF.format(height*100.0) + "cm";
+        Log.e("dv", s);
+        return s;
+
+    }
+    private long getFreeFallTime() {
         if (inFreefall) {
-            freeFallTime = System.currentTimeMillis()-stop;
+            freeFallTime = System.currentTimeMillis() - stop;
         }
 
         return freeFallTime;
@@ -114,28 +184,26 @@ public class MainActivity extends Activity implements SensorEventListener {
 
         double g = Math.sqrt(axisX * axisX + axisY * axisY + axisZ * axisZ);
 
-        NumberFormat nf = NumberFormat.getNumberInstance();
-        nf.setMaximumFractionDigits(2);
 
-        if (g < THRESHOLD_FREEFALL){
+        if (g < THRESHOLD_FREEFALL) {
             onFreefall();
         }
-        if (g > THRESHOLD_BACK_TO_EARTH){
+        if (g > THRESHOLD_BACK_TO_EARTH) {
             onBackToEarth();
         }
 
         minG = Math.min(minG, g);
-        maxG = Math.max(maxG,g);
+        maxG = Math.max(maxG, g);
 
-        mTextViewMinMaxG.setText(nf.format(minG) + ":" + nf.format(maxG));
+        mTextViewMinMaxG.setText(NF.format(minG) + ":" + NF.format(maxG));
 
 
         mTextViewAirborneTime.setText(getFreeFallTime() + "ms");
-        mTextView.setText(nf.format(g));
-        mTextViewAccX.setText(nf.format(axisX));
-        mTextViewAccY.setText(nf.format(axisY));
-        mTextViewAccZ.setText(nf.format(axisZ));
-        mTextViewAccG.setText(nf.format(g));
+        mTextView.setText(NF.format(g));
+        mTextViewAccX.setText(NF.format(axisX));
+        mTextViewAccY.setText(NF.format(axisY));
+        mTextViewAccZ.setText(NF.format(axisZ));
+        mTextViewAccG.setText(NF.format(g));
 
     }
 
