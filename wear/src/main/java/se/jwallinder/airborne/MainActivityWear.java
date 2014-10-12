@@ -21,10 +21,8 @@ import se.heinrisch.talkclient.adapters.TalkCallbackAdapter;
 
 public class MainActivityWear extends Activity implements SensorEventListener {
 
-    //private TextView mTextView;
     private TextView mTextViewAirborneTime;
-    //private TextView mTextViewAccX, mTextViewAccY, mTextViewAccZ, mTextViewAccG, mTextViewMinMaxG;
-    // private TextView mTextViewGravX, mTextViewGravY, mTextViewGravZ, mTextViewGravG;
+
     private SensorManager mSensorManager;
     private Sensor mSensorAcc, mSensorGrav;
     private TalkClient mTalkClient;
@@ -63,21 +61,7 @@ public class MainActivityWear extends Activity implements SensorEventListener {
         stub.setOnLayoutInflatedListener(new WatchViewStub.OnLayoutInflatedListener() {
             @Override
             public void onLayoutInflated(WatchViewStub stub) {
-                //mTextView = (TextView) stub.findViewById(R.id.text);
                 mTextViewAirborneTime = (TextView) stub.findViewById(R.id.airborne_time);
-
-//                mTextViewMinMaxG = (TextView) stub.findViewById(R.id.minMaxG);
-//
-//                mTextViewAccX = (TextView) stub.findViewById(R.id.accX);
-//                mTextViewAccY = (TextView) stub.findViewById(R.id.accY);
-//                mTextViewAccZ = (TextView) stub.findViewById(R.id.accZ);
-//                mTextViewAccG = (TextView) stub.findViewById(R.id.accG);
-//
-//                mTextViewGravX = (TextView) stub.findViewById(R.id.gravX);
-//                mTextViewGravY = (TextView) stub.findViewById(R.id.gravY);
-//                mTextViewGravZ = (TextView) stub.findViewById(R.id.gravZ);
-//                mTextViewGravG = (TextView) stub.findViewById(R.id.gravG);
-
 
                 mSensorGrav = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
                 mSensorManager.registerListener(MainActivityWear.this, mSensorGrav, SensorManager.SENSOR_DELAY_GAME);
@@ -131,9 +115,6 @@ public class MainActivityWear extends Activity implements SensorEventListener {
             inFreefall = false;
             freeFallTime = stop - start;
 
-            //T = sqrt ( 2 * height / 9.8 )
-            //T^2 = 2*heigtt/9.9
-            //H = 9.8*T^2/2
 
             sendMessage("/airborne", "airborneTime", getFreeFallString());
         }
@@ -149,6 +130,12 @@ public class MainActivityWear extends Activity implements SensorEventListener {
     }
 
     private String getFreeFallString() {
+        //free fall time equation
+        //T = sqrt ( 2 * height / 9.8 )
+        //T^2 = 2*height/9.9
+        //H = 9.8*T^2/2
+        //since we start at level 0, reach height H and return to level
+        //we
         double height = 9.8 * (freeFallTime * freeFallTime / 1000000.0) / 8;
         String s = NF.format(freeFallTime) + "ms, " + NF.format(height * 100.0) + "cm";
         Log.e("dv", s);
@@ -195,15 +182,7 @@ public class MainActivityWear extends Activity implements SensorEventListener {
         minG = Math.min(minG, g);
         maxG = Math.max(maxG, g);
 
-        //mTextViewMinMaxG.setText(NF.format(minG) + ":" + NF.format(maxG));
-
-
         mTextViewAirborneTime.setText(getFreeFallTime() + "ms");
-//        mTextView.setText(NF.format(g));
-//        mTextViewAccX.setText(NF.format(axisX));
-//        mTextViewAccY.setText(NF.format(axisY));
-//        mTextViewAccZ.setText(NF.format(axisZ));
-//        mTextViewAccG.setText(NF.format(g));
 
     }
 
@@ -213,15 +192,6 @@ public class MainActivityWear extends Activity implements SensorEventListener {
         float axisY = event.values[1];
         float axisZ = event.values[2];
 
-        double g = Math.sqrt(axisX * axisX + axisY * axisY + axisZ * axisZ);
-
-        NumberFormat nf = NumberFormat.getNumberInstance();
-        nf.setMaximumFractionDigits(2);
-//        mTextView.setText(nf.format(g));
-//        mTextViewGravX.setText(nf.format(axisX));
-//        mTextViewGravY.setText(nf.format(axisY));
-//        mTextViewGravZ.setText(nf.format(axisZ));
-//        mTextViewGravG.setText(nf.format(g));
 
     }
 
