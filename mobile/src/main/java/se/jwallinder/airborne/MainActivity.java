@@ -27,23 +27,6 @@ public class MainActivity extends Activity {
 
         mTextViewAirbornTime = (TextView) findViewById(R.id.airborneTime);
         mTextViewAirbornTime.setText(getIntent().getStringExtra("value"));
-  /*      mTalkClient.setTalkMessageAdapter(new TalkMessageAdapter() {
-            @Override
-            public void onMessageReceived(MessageEvent messageEvent) {
-                Log.e("talk", "messager recieved");
-                final DataMap dataMap = DataMap.fromByteArray(messageEvent.getData());
-                if (dataMap.containsKey("airborneTime")) {
-
-                    mTextViewAirbornTime.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            mTextViewAirbornTime.setText(dataMap.getString("airborneTime") + "ms");
-                        }
-                    });
-                }
-            }
-
-        });*/
 
 
     }
@@ -61,7 +44,6 @@ public class MainActivity extends Activity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
