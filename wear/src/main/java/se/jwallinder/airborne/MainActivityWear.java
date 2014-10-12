@@ -13,20 +13,18 @@ import android.view.WindowManager;
 import android.widget.TextView;
 
 import com.google.android.gms.wearable.DataMap;
-import com.google.android.gms.wearable.MessageApi;
 
 import java.text.NumberFormat;
 
 import se.heinrisch.talkclient.TalkClient;
 import se.heinrisch.talkclient.adapters.TalkCallbackAdapter;
-import se.heinrisch.talkclient.adapters.TalkMessageAdapter;
 
 public class MainActivityWear extends Activity implements SensorEventListener {
 
-    private TextView mTextView;
+    //private TextView mTextView;
     private TextView mTextViewAirborneTime;
-    private TextView mTextViewAccX, mTextViewAccY, mTextViewAccZ, mTextViewAccG, mTextViewMinMaxG;
-    private TextView mTextViewGravX, mTextViewGravY, mTextViewGravZ, mTextViewGravG;
+    //private TextView mTextViewAccX, mTextViewAccY, mTextViewAccZ, mTextViewAccG, mTextViewMinMaxG;
+    // private TextView mTextViewGravX, mTextViewGravY, mTextViewGravZ, mTextViewGravG;
     private SensorManager mSensorManager;
     private Sensor mSensorAcc, mSensorGrav;
     private TalkClient mTalkClient;
@@ -51,10 +49,10 @@ public class MainActivityWear extends Activity implements SensorEventListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mTalkClient = new TalkClient(this);
-        mTalkClient.setTalkCallbackAdapter(new TalkCallbackAdapter(){
+        mTalkClient.setTalkCallbackAdapter(new TalkCallbackAdapter() {
             @Override
             public void onConnected(Bundle bundle) {
-                sendMessage("/airborne", "airborneTime","device is ready");
+                sendMessage("/airborne", "airborneTime", "device is ready");
             }
         });
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -65,19 +63,20 @@ public class MainActivityWear extends Activity implements SensorEventListener {
         stub.setOnLayoutInflatedListener(new WatchViewStub.OnLayoutInflatedListener() {
             @Override
             public void onLayoutInflated(WatchViewStub stub) {
-                mTextView = (TextView) stub.findViewById(R.id.text);
+                //mTextView = (TextView) stub.findViewById(R.id.text);
                 mTextViewAirborneTime = (TextView) stub.findViewById(R.id.airborne_time);
-                mTextViewMinMaxG = (TextView) stub.findViewById(R.id.minMaxG);
 
-                mTextViewAccX = (TextView) stub.findViewById(R.id.accX);
-                mTextViewAccY = (TextView) stub.findViewById(R.id.accY);
-                mTextViewAccZ = (TextView) stub.findViewById(R.id.accZ);
-                mTextViewAccG = (TextView) stub.findViewById(R.id.accG);
-
-                mTextViewGravX = (TextView) stub.findViewById(R.id.gravX);
-                mTextViewGravY = (TextView) stub.findViewById(R.id.gravY);
-                mTextViewGravZ = (TextView) stub.findViewById(R.id.gravZ);
-                mTextViewGravG = (TextView) stub.findViewById(R.id.gravG);
+//                mTextViewMinMaxG = (TextView) stub.findViewById(R.id.minMaxG);
+//
+//                mTextViewAccX = (TextView) stub.findViewById(R.id.accX);
+//                mTextViewAccY = (TextView) stub.findViewById(R.id.accY);
+//                mTextViewAccZ = (TextView) stub.findViewById(R.id.accZ);
+//                mTextViewAccG = (TextView) stub.findViewById(R.id.accG);
+//
+//                mTextViewGravX = (TextView) stub.findViewById(R.id.gravX);
+//                mTextViewGravY = (TextView) stub.findViewById(R.id.gravY);
+//                mTextViewGravZ = (TextView) stub.findViewById(R.id.gravZ);
+//                mTextViewGravG = (TextView) stub.findViewById(R.id.gravG);
 
 
                 mSensorGrav = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
@@ -149,13 +148,14 @@ public class MainActivityWear extends Activity implements SensorEventListener {
         mTalkClient.sendMessage(path, dataMap);
     }
 
-    private String getFreeFallString(){
-         double height = 9.8*(freeFallTime*freeFallTime/1000000.0)/8;
-        String s = NF.format(freeFallTime)+"ms, " + NF.format(height*100.0) + "cm";
+    private String getFreeFallString() {
+        double height = 9.8 * (freeFallTime * freeFallTime / 1000000.0) / 8;
+        String s = NF.format(freeFallTime) + "ms, " + NF.format(height * 100.0) + "cm";
         Log.e("dv", s);
         return s;
 
     }
+
     private long getFreeFallTime() {
         if (inFreefall) {
             freeFallTime = System.currentTimeMillis() - stop;
@@ -195,15 +195,15 @@ public class MainActivityWear extends Activity implements SensorEventListener {
         minG = Math.min(minG, g);
         maxG = Math.max(maxG, g);
 
-        mTextViewMinMaxG.setText(NF.format(minG) + ":" + NF.format(maxG));
+        //mTextViewMinMaxG.setText(NF.format(minG) + ":" + NF.format(maxG));
 
 
         mTextViewAirborneTime.setText(getFreeFallTime() + "ms");
-        mTextView.setText(NF.format(g));
-        mTextViewAccX.setText(NF.format(axisX));
-        mTextViewAccY.setText(NF.format(axisY));
-        mTextViewAccZ.setText(NF.format(axisZ));
-        mTextViewAccG.setText(NF.format(g));
+//        mTextView.setText(NF.format(g));
+//        mTextViewAccX.setText(NF.format(axisX));
+//        mTextViewAccY.setText(NF.format(axisY));
+//        mTextViewAccZ.setText(NF.format(axisZ));
+//        mTextViewAccG.setText(NF.format(g));
 
     }
 
@@ -217,11 +217,11 @@ public class MainActivityWear extends Activity implements SensorEventListener {
 
         NumberFormat nf = NumberFormat.getNumberInstance();
         nf.setMaximumFractionDigits(2);
-        mTextView.setText(nf.format(g));
-        mTextViewGravX.setText(nf.format(axisX));
-        mTextViewGravY.setText(nf.format(axisY));
-        mTextViewGravZ.setText(nf.format(axisZ));
-        mTextViewGravG.setText(nf.format(g));
+//        mTextView.setText(nf.format(g));
+//        mTextViewGravX.setText(nf.format(axisX));
+//        mTextViewGravY.setText(nf.format(axisY));
+//        mTextViewGravZ.setText(nf.format(axisZ));
+//        mTextViewGravG.setText(nf.format(g));
 
     }
 
