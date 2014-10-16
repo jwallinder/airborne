@@ -19,15 +19,15 @@ import java.text.NumberFormat;
 import se.heinrisch.talkclient.TalkClient;
 import se.heinrisch.talkclient.adapters.TalkCallbackAdapter;
 
-public class MainActivityWear extends Activity implements SensorEventListener {
+public class MainActivityWear extends Activity implements SensorEventListener, AirborneListener {
 
     private TextView mTextViewAirborneTime;
-
+    private AirborneManager airborneManager = new AirborneManager();
     private SensorManager mSensorManager;
     private Sensor mSensorAcc, mSensorGrav;
     private TalkClient mTalkClient;
 
-    private boolean inFreefall = false;
+
     private long start, stop, freeFallTime;
 
     private static final double THRESHOLD_FREEFALL = 3.0;
@@ -40,6 +40,10 @@ public class MainActivityWear extends Activity implements SensorEventListener {
 
     {
         NF.setMaximumFractionDigits(2);
+    }
+
+    public MainActivityWear() {
+
     }
 
     @Override
@@ -58,24 +62,32 @@ public class MainActivityWear extends Activity implements SensorEventListener {
 
         final WatchViewStub stub = (WatchViewStub) findViewById(R.id.watch_view_stub);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+
         stub.setOnLayoutInflatedListener(new WatchViewStub.OnLayoutInflatedListener() {
             @Override
             public void onLayoutInflated(WatchViewStub stub) {
                 mTextViewAirborneTime = (TextView) stub.findViewById(R.id.airborne_time);
 
-  
-                mSensorAcc = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-                mSensorManager.registerListener(MainActivityWear.this, mSensorAcc, SensorManager.SENSOR_DELAY_GAME);
 
+                mSensorManager.registerListener(MainActivityWear.this, getmSensorAcc(), SensorManager.SENSOR_DELAY_GAME);
+                airborneManager.setAirborneListener(MainActivityWear.this);
 
             }
         });
     }
 
+    public Sensor getmSensorAcc() {
+        if (mSensorAcc == null) {
+            mSensorAcc = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        }
+        return mSensorAcc;
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
-        mSensorManager.registerListener(MainActivityWear.this, mSensorAcc, SensorManager.SENSOR_DELAY_GAME);
+        mSensorManager.registerListener(MainActivityWear.this, getmSensorAcc(), SensorManager.SENSOR_DELAY_GAME);
 
         mTalkClient.connectClient();
 
@@ -95,27 +107,18 @@ public class MainActivityWear extends Activity implements SensorEventListener {
 
     }
 
-    private void onFreefall() {
-        if (!inFreefall) {
-            start = System.currentTimeMillis();
-            inFreefall = true;
-            freeFallTime = 0;
-        }
+    @Override
+    public void onBeginFreeFall() {
 
     }
 
-    private void onBackToEarth() {
-        if (inFreefall) {
-            stop = System.currentTimeMillis();
-            inFreefall = false;
-            freeFallTime = stop - start;
+    @Override
+    public void onEndFreeFall() {
 
 
-            sendMessage("/airborne", "airborneTime", getFreeFallString());
-        }
-
-
+        sendMessage("/airborne", "airborneTime", getFreeFallString());
     }
+
 
     private void sendMessage(String path, String key, String value) {
         DataMap dataMap = new DataMap();
@@ -131,6 +134,7 @@ public class MainActivityWear extends Activity implements SensorEventListener {
         //H = 9.8*T^2/2
         //since we start at level 0, reach height H and return to level
         //we
+        freeFallTime = getFreeFallTime();
         double height = 9.8 * (freeFallTime * freeFallTime / 1000000.0) / 8;
         String s = NF.format(freeFallTime) + "ms, " + NF.format(height * 100.0) + "cm";
         Log.e("dv", s);
@@ -139,59 +143,38 @@ public class MainActivityWear extends Activity implements SensorEventListener {
     }
 
     private long getFreeFallTime() {
-        if (inFreefall) {
-            freeFallTime = System.currentTimeMillis() - stop;
-        }
 
-        return freeFallTime;
+        return airborneManager.getFreeFallTime();
     }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        if (event.sensor.getType() == Sensor.TYPE_GRAVITY) {
-            onGravitySensorChanged(event);
-        }
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            onAccSensorChanged(event);
-        }
-
-    }
-
-
-    public void onAccSensorChanged(SensorEvent event) {
 
         float axisX = event.values[0];
         float axisY = event.values[1];
         float axisZ = event.values[2];
 
-        double g = Math.sqrt(axisX * axisX + axisY * axisY + axisZ * axisZ);
+        airborneManager.setSensorData(axisX, axisY, axisZ);
 
 
-        if (g < THRESHOLD_FREEFALL) {
-            onFreefall();
-        }
-        if (g > THRESHOLD_BACK_TO_EARTH) {
-            onBackToEarth();
-        }
-
-        minG = Math.min(minG, g);
-        maxG = Math.max(maxG, g);
-
-        mTextViewAirborneTime.setText(getFreeFallTime() + "ms");
+        setTextToView();
 
     }
 
-    public void onGravitySensorChanged(SensorEvent event) {
-
-        float axisX = event.values[0];
-        float axisY = event.values[1];
-        float axisZ = event.values[2];
-
-
+    private void setTextToView() {
+        if (mTextViewAirborneTime != null ) {
+            mTextViewAirborneTime.post(new Runnable() {
+                @Override
+                public void run() {
+                    mTextViewAirborneTime.setText(getFreeFallTime() + "ms");
+                }
+            });
+        }
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
 
     }
+
 }
