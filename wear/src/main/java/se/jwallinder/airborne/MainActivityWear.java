@@ -28,14 +28,6 @@ public class MainActivityWear extends Activity implements SensorEventListener, A
     private TalkClient mTalkClient;
 
 
-    private long start, stop, freeFallTime;
-
-    private static final double THRESHOLD_FREEFALL = 3.0;
-    private static final double THRESHOLD_BACK_TO_EARTH = 9.0;
-
-    double maxG = 0;
-    double minG = 1000;
-
     public static final NumberFormat NF = NumberFormat.getNumberInstance();
 
     {
@@ -134,7 +126,7 @@ public class MainActivityWear extends Activity implements SensorEventListener, A
         //H = 9.8*T^2/2
         //since we start at level 0, reach height H and return to level
         //we
-        freeFallTime = getFreeFallTime();
+        long freeFallTime = getFreeFallTime();
         double height = 9.8 * (freeFallTime * freeFallTime / 1000000.0) / 8;
         String s = NF.format(freeFallTime) + "ms, " + NF.format(height * 100.0) + "cm";
         Log.e("dv", s);
@@ -162,7 +154,7 @@ public class MainActivityWear extends Activity implements SensorEventListener, A
     }
 
     private void setTextToView() {
-        if (mTextViewAirborneTime != null ) {
+        if (mTextViewAirborneTime != null) {
             mTextViewAirborneTime.post(new Runnable() {
                 @Override
                 public void run() {

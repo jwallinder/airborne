@@ -1,6 +1,5 @@
 package se.jwallinder.airborne;
 
-import android.hardware.SensorEventListener;
 
 public class AirborneManager {
     private static final double THRESHOLD_FREEFALL = 3.0;
@@ -63,8 +62,8 @@ public class AirborneManager {
         this.airborneListener = airborneListener;
     }
 
-    public double getAcceleration(){
-        return  Math.sqrt(axisX * axisX + axisY * axisY + axisZ * axisZ);
+    public double getAcceleration() {
+        return Math.sqrt(axisX * axisX + axisY * axisY + axisZ * axisZ);
     }
 
 }
