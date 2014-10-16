@@ -63,9 +63,7 @@ public class MainActivityWear extends Activity implements SensorEventListener {
             public void onLayoutInflated(WatchViewStub stub) {
                 mTextViewAirborneTime = (TextView) stub.findViewById(R.id.airborne_time);
 
-                mSensorGrav = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
-                mSensorManager.registerListener(MainActivityWear.this, mSensorGrav, SensorManager.SENSOR_DELAY_GAME);
-
+  
                 mSensorAcc = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
                 mSensorManager.registerListener(MainActivityWear.this, mSensorAcc, SensorManager.SENSOR_DELAY_GAME);
 
@@ -77,13 +75,9 @@ public class MainActivityWear extends Activity implements SensorEventListener {
     @Override
     protected void onResume() {
         super.onResume();
+        mSensorManager.registerListener(MainActivityWear.this, mSensorAcc, SensorManager.SENSOR_DELAY_GAME);
+
         mTalkClient.connectClient();
-
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
 
     }
 
@@ -96,8 +90,9 @@ public class MainActivityWear extends Activity implements SensorEventListener {
 
     @Override
     protected void onDestroy() {
-        mTalkClient.disconnectClient();
         super.onDestroy();
+        mTalkClient.disconnectClient();
+
     }
 
     private void onFreefall() {
